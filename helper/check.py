@@ -10,6 +10,7 @@
                    2019/08/06: 执行代理校验
                    2021/05/25: 分别校验http和https
                    2022/08/16: 获取代理Region信息
+                   2025/02/08: 修复获取代理Region信息的问题（采用淘宝api） by @fengwm64，感谢 @Jerry12228
 -------------------------------------------------
 """
 __author__ = 'JHao'
@@ -22,6 +23,8 @@ from handler.logHandler import LogHandler
 from helper.validator import ProxyValidator
 from handler.proxyHandler import ProxyHandler
 from handler.configHandler import ConfigHandler
+import requests
+import json
 
 
 class DoValidator(object):
@@ -45,12 +48,13 @@ class DoValidator(object):
         proxy.check_count += 1
         proxy.last_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         proxy.last_status = True if http_r else False
+        proxy._region = cls.region_get(proxy.proxy)
+        proxy._anonymous = cls.anonymousValidator(proxy.proxy, proxy.https)
+        
         if http_r:
             if proxy.fail_count > 0:
                 proxy.fail_count -= 1
             proxy.https = True if https_r else False
-            if work_type == "raw":
-                proxy.region = cls.regionGetter(proxy) if cls.conf.proxyRegion else ""
         else:
             proxy.fail_count += 1
         return proxy
@@ -77,14 +81,54 @@ class DoValidator(object):
         return True
 
     @classmethod
-    def regionGetter(cls, proxy):
+    def region_get(cls, proxy):
         try:
-            url = 'https://searchplugin.csdn.net/api/v1/ip/get?ip=%s' % proxy.proxy.split(':')[0]
-            r = WebRequest().get(url=url, retry_time=1, timeout=2).json
-            return r['data']['address']
-        except:
-            return 'error'
+            print(f" ")
+            print(f"正在获取代理 {proxy} 的地理位置信息...")
+            print(f" ")
+            # 提取代理的 IP 地址部分
+            ip = proxy.split(':')[0]
+            
+            # 构造请求 URL，调用 ip.taobao.com 的 API
+            url = f'https://ip.taobao.com/outGetIpInfo?accessKey=alibaba-inc&ip={ip}'
+            r = requests.get(url)
+            data = r.json()
+            
+            # 如果返回的 code 为 0，表示查询成功
+            if data['code'] == 0:
+                # 从返回的数据中提取相关信息
+                country = data['data'].get('country', '未知')
+                region = data['data'].get('region', '未知')
+                city = data['data'].get('city', '未知')
+                return f"{country}-{region}-{city}"
+            else:
+                return '未知或请求失败'
+        
+        except Exception as e:
+            # 捕获异常并返回 '未知或请求失败'
+            print(f"请求失败: {e}")
+            return '未知或请求失败'
+    
+    @classmethod
+    def anonymousValidator(cls, proxy, https):
+        if https:
+            url = 'https://httpbin.org/get'
+            proxy = {'https': proxy}
+        else:
+            url = 'http://httpbin.org/get'
+            proxy = {'http': proxy}
 
+        r = requests.get(url, proxies=proxy)
+        r = json.loads(r.text)
+        try:
+            if ',' in r.get('origin'):
+                return 0
+            elif r.get('headers').get('Proxy-connecttion', False):
+                return 1
+            else:
+                return 2
+        except:
+            return -1
 
 class _ThreadChecker(Thread):
     """ 多线程检测 """
