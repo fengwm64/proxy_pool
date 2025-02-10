@@ -1,11 +1,7 @@
 
 ProxyPool 爬虫代理IP池
 =======
-[![Build Status](https://travis-ci.org/jhao104/proxy_pool.svg?branch=master)](https://travis-ci.org/jhao104/proxy_pool)
-[![](https://img.shields.io/badge/Powered%20by-@j_hao104-green.svg)](http://www.spiderpy.cn/blog/)
-[![Packagist](https://img.shields.io/packagist/l/doctrine/orm.svg)](https://github.com/jhao104/proxy_pool/blob/master/LICENSE)
-[![GitHub contributors](https://img.shields.io/github/contributors/jhao104/proxy_pool.svg)](https://github.com/jhao104/proxy_pool/graphs/contributors)
-[![](https://img.shields.io/badge/language-Python-green.svg)](https://github.com/jhao104/proxy_pool)
+
 
     ______                        ______             _
     | ___ \_                      | ___ \           | |
@@ -18,11 +14,7 @@ ProxyPool 爬虫代理IP池
 
 ### ProxyPool
 
-爬虫代理IP池项目,主要功能为定时采集网上发布的免费代理验证入库，定时验证入库的代理保证代理的可用性，提供API和CLI两种使用方式。同时你也可以扩展代理源以增加代理池IP的质量和数量。
-
-* 文档: [document](https://proxy-pool.readthedocs.io/zh/latest/) [![Documentation Status](https://readthedocs.org/projects/proxy-pool/badge/?version=latest)](https://proxy-pool.readthedocs.io/zh/latest/?badge=latest)
-
-* 支持版本: [![](https://img.shields.io/badge/Python-2.7-green.svg)](https://docs.python.org/2.7/)
+[![](https://img.shields.io/badge/Python-2.7-green.svg)](https://docs.python.org/2.7/)
 [![](https://img.shields.io/badge/Python-3.5-blue.svg)](https://docs.python.org/3.5/)
 [![](https://img.shields.io/badge/Python-3.6-blue.svg)](https://docs.python.org/3.6/)
 [![](https://img.shields.io/badge/Python-3.7-blue.svg)](https://docs.python.org/3.7/)
@@ -31,79 +23,19 @@ ProxyPool 爬虫代理IP池
 [![](https://img.shields.io/badge/Python-3.10-blue.svg)](https://docs.python.org/3.10/)
 [![](https://img.shields.io/badge/Python-3.11-blue.svg)](https://docs.python.org/3.11/)
 
-* 测试地址: http://demo.spiderpy.cn (勿压谢谢)
+爬虫代理IP池项目,主要功能为定时采集网上发布的免费代理验证入库，定时验证入库的代理保证代理的可用性，提供API和CLI两种使用方式。同时你也可以扩展代理源以增加代理池IP的质量和数量。
 
-* 付费代理推荐: [luminati-china](https://get.brightdata.com/github_jh). 国外的亮数据BrightData（以前叫luminati）被认为是代理市场领导者，覆盖全球的7200万IP，大部分是真人住宅IP，成功率扛扛的。付费套餐多种，需要高质量代理IP的可以注册后联系中文客服。[申请免费试用](https://get.brightdata.com/github_jh) 现在有首充多少送多少的活动。(PS:用不明白的同学可以参考这个[使用教程](https://www.cnblogs.com/jhao/p/15611785.html))。
+本项目 fork 自大佬 [@jhao104](https://github.com/jhao104) 的项目 [proxy_pool](https://github.com/jhao104/proxy_pool)，但是原项目已经许久没有更新，我在原项目的issu和pull request收集了一些更新，更新了一下新的免费代理获取方式、修复了匿名度获取、地区获取功能。
 
 
 ### 运行项目
 
-##### 下载代码:
-
-* git clone
-
-```bash
-git clone git@github.com:jhao104/proxy_pool.git
-```
-
-* releases
-
-```bash
-https://github.com/jhao104/proxy_pool/releases 下载对应zip文件
-```
-
-##### 安装依赖:
-
-```bash
-pip install -r requirements.txt
-```
-
-##### 更新配置:
-
-
-```python
-# setting.py 为项目配置文件
-
-# 配置API服务
-
-HOST = "0.0.0.0"               # IP
-PORT = 5000                    # 监听端口
-
-
-# 配置数据库
-
-DB_CONN = 'redis://:pwd@127.0.0.1:8888/0'
-
-
-# 配置 ProxyFetcher
-
-PROXY_FETCHER = [
-    "freeProxy01",      # 这里是启用的代理抓取方法名，所有fetch方法位于fetcher/proxyFetcher.py
-    "freeProxy02",
-    # ....
-]
-```
-
-#### 启动项目:
-
-```bash
-# 如果已经具备运行条件, 可用通过proxyPool.py启动。
-# 程序分为: schedule 调度程序 和 server Api服务
-
-# 启动调度程序
-python proxyPool.py schedule
-
-# 启动webApi服务
-python proxyPool.py server
-
-```
-
 ### Docker Image
 
 ```bash
-docker pull jhao104/proxy_pool
+docker pull oixel64/proxy_pool:master
 
-docker run --env DB_CONN=redis://:password@ip:port/0 -p 5010:5010 jhao104/proxy_pool:latest
+docker run --env DB_CONN=redis://:password@ip:port/0 -p 5010:5010 docker.xuanyuan.me/oixel64/proxy_pool
 ```
 ### docker-compose
 
@@ -133,30 +65,169 @@ docker-compose up -d
 　　如果要在爬虫代码中使用的话， 可以将此api封装成函数直接使用，例如：
 
 ```python
+# proxy.py
 import requests
+from pprint import pprint
 
-def get_proxy():
-    return requests.get("http://127.0.0.1:5010/get/").json()
-
-def delete_proxy(proxy):
-    requests.get("http://127.0.0.1:5010/delete/?proxy={}".format(proxy))
-
-# your spider code
-
-def getHtml():
-    # ....
-    retry_count = 5
-    proxy = get_proxy().get("proxy")
-    while retry_count > 0:
+class ProxyPool:
+    def __init__(self, host='127.0.0.1', port=5010):
+        """
+        初始化代理池
+        :param host: 代理池服务地址
+        :param port: 代理池服务端口
+        """
+        self.base_url = f"http://{host}:{port}"
+    
+    def _make_request(self, endpoint, params=None):
+        """
+        内部请求方法
+        :param endpoint: API端点
+        :param params: 请求参数
+        :return: 响应数据或None
+        """
         try:
-            html = requests.get('http://www.example.com', proxies={"http": "http://{}".format(proxy)})
-            # 使用代理访问
-            return html
-        except Exception:
-            retry_count -= 1
-    # 删除代理池中代理
-    delete_proxy(proxy)
-    return None
+            response = requests.get(
+                f"{self.base_url}{endpoint}",
+                params=params,
+                timeout=5
+            )
+            return response.json() if response.status_code == 200 else None
+        except requests.exceptions.RequestException as e:
+            print(f"请求代理池API失败: {str(e)}")
+            return None
+    
+    def get_api_info(self):
+        """
+        获取API介绍信息
+        :return: API介绍信息
+        """
+        return self._make_request("/")
+    
+    def test_proxy(cls, proxy, test_url='https://www.baidu.com', max_retries=5):
+        """
+        测试代理是否可用，最多重试 max_retries 次
+        :param proxy: 代理字符串（host:port）
+        :param test_url: 测试的 URL（默认为 https://www.baidu.com）
+        :param max_retries: 最大重试次数（默认 5）
+        :return: True（可用） / False（不可用）
+        """
+        proxies = {"http": f"http://{proxy}", "https": f"http://{proxy}"}
+        
+        failure_count = 0  # 记录连续失败的次数
+        
+        while failure_count < max_retries:
+            try:
+                response = requests.get(test_url, proxies=proxies, timeout=10)
+                
+                # 如果状态码是 2xx，则认为代理可用
+                if response.status_code // 100 == 2:
+                    return True
+                else:
+                    failure_count += 1  # 状态码不是 2xx，增加失败次数
+            
+            except requests.exceptions.RequestException as e:
+                failure_count += 1  # 网络请求异常，增加失败次数
+        
+        # 如果重试超过最大次数，认为代理不可用
+        return False
+
+    def get_proxy(self, proxy_type=None, need_test=True):
+        """
+        随机获取一个代理并测试其可用性
+        :param proxy_type: 代理类型（可选，如'https'）
+        :param need_test: 是否需要测试代理的可用性，默认为 True
+        :return: 可用的代理字符串（host:port），如果没有找到可用代理，则返回 None
+        """
+        # 从代理源获取一个代理
+        params = {'type': proxy_type} if proxy_type else None
+        result = self._make_request("/get/", params)
+        proxy = result.get("proxy") if result else None
+
+        if proxy:
+            if need_test:
+                # 测试获取到的代理是否可用
+                if self.test_proxy(proxy):
+                    return proxy
+                else:
+                    self.delete_proxy(proxy)  # 删除不可用代理
+                    return self.get_proxy(proxy_type, need_test)  # 递归获取新代理
+            else:
+                return proxy
+        return None
+    
+    def pop_proxy(self, proxy_type=None):
+        """
+        获取并删除一个代理
+        :param proxy_type: 代理类型（可选，如'https'）
+        :return: 代理字符串（host:port）或None
+        """
+        params = {'type': proxy_type} if proxy_type else None
+        result = self._make_request("/pop/", params)
+        return result.get("proxy") if result else None
+    
+    def get_all_proxies(self, proxy_type=None):
+        """
+        获取所有代理
+        :param proxy_type: 代理类型（可选，如'https'）
+        :return: 代理列表或None
+        """
+        params = {'type': proxy_type} if proxy_type else None
+        result = self._make_request("/all/", params)
+
+        if isinstance(result, list):
+            return result  # 直接返回列表
+        else:
+            print("返回数据格式错误，预期为列表:", result)
+            return None
+    
+    def get_proxy_count(self):
+        """
+        获取代理数量
+        :return: 代理数量（整数）
+        """
+        result = self._make_request("/count/")
+        return result.get("count", 0) if result else 0
+    
+    def delete_proxy(self, proxy):
+        """
+        删除指定代理
+        :param proxy: 要删除的代理（host:port格式）
+        :return: True（删除成功） / False（删除失败）
+        """
+        result = self._make_request("/delete/", {'proxy': proxy})
+        return result.get("src") == 1 if isinstance(result, dict) else False
+
+# 示例代码
+# 初始化代理池
+# proxy_pool = ProxyPool(host='192.168.123.2', port=5010)
+
+# 1. 获取API介绍
+# print("API介绍:", proxy_pool.get_api_info())
+
+# 2. 获取随机代理
+# random_proxy = proxy_pool.get_proxy('https')
+# print("随机代理:", random_proxy)
+
+# 3. 获取并删除一个HTTPS代理
+# https_proxy = proxy_pool.pop_proxy('https')
+# print("获取并删除的HTTPS代理:", https_proxy)
+
+# 4. 获取所有HTTP代理
+# http_proxies = proxy_pool.get_all_proxies('https')
+# if http_proxies:
+#     print("所有HTTP代理:")
+#     pprint(http_proxies, sort_dicts=False)  # `sort_dicts=False` 保持原顺序
+# else:
+#     print("未获取到代理")
+
+# 5. 获取代理数量
+# proxy_count = proxy_pool.get_proxy_count()
+# print("当前代理数量:", proxy_count)
+
+# 6. 删除指定代理
+# if random_proxy:
+#     delete_result = proxy_pool.delete_proxy(random_proxy)
+#     print(f"删除代理 {random_proxy} 结果:", "成功" if delete_result else "失败")
 ```
 
 ### 扩展代理
@@ -224,23 +295,17 @@ PROXY_FETCHER = [
 
 ### 问题反馈
 
-　　任何问题欢迎在[Issues](https://github.com/jhao104/proxy_pool/issues) 中反馈，同时也可以到我的[博客](http://www.spiderpy.cn/blog/message)中留言。
-
-　　你的反馈会让此项目变得更加完美。
+　　任何问题欢迎在[Issues](https://github.com/fengwm64/proxy_pool/issues) 中反馈，但是本人能力有限，只能尽力尝试解决。
 
 ### 贡献代码
 
-　　本项目仅作为基本的通用的代理池架构，不接收特有功能(当然,不限于特别好的idea)。
-
-　　本项目依然不够完善，如果发现bug或有新的功能添加，请在[Issues](https://github.com/jhao104/proxy_pool/issues)中提交bug(或新功能)描述，我会尽力改进，使她更加完美。
+　　本项目依然不够完善，如果发现bug或有新的功能添加，请在[Issues](https://github.com/fengwm64/proxy_pool/issues)中提交bug(或新功能)描述，我会尽力改进，使她更加完美。
 
 　　这里感谢以下contributor的无私奉献：
 
-　　[@kangnwh](https://github.com/kangnwh) | [@bobobo80](https://github.com/bobobo80) | [@halleywj](https://github.com/halleywj) | [@newlyedward](https://github.com/newlyedward) | [@wang-ye](https://github.com/wang-ye) | [@gladmo](https://github.com/gladmo) | [@bernieyangmh](https://github.com/bernieyangmh) | [@PythonYXY](https://github.com/PythonYXY) | [@zuijiawoniu](https://github.com/zuijiawoniu) | [@netAir](https://github.com/netAir) | [@scil](https://github.com/scil) | [@tangrela](https://github.com/tangrela) | [@highroom](https://github.com/highroom) | [@luocaodan](https://github.com/luocaodan) | [@vc5](https://github.com/vc5) | [@1again](https://github.com/1again) | [@obaiyan](https://github.com/obaiyan) | [@zsbh](https://github.com/zsbh) | [@jiannanya](https://github.com/jiannanya) | [@Jerry12228](https://github.com/Jerry12228)
+　　[@jhao104](https://github.com/jhao104) | [@kangnwh](https://github.com/kangnwh) | [@bobobo80](https://github.com/bobobo80) | [@halleywj](https://github.com/halleywj) | [@newlyedward](https://github.com/newlyedward) | [@wang-ye](https://github.com/wang-ye) | [@gladmo](https://github.com/gladmo) | [@bernieyangmh](https://github.com/bernieyangmh) | [@PythonYXY](https://github.com/PythonYXY) | [@zuijiawoniu](https://github.com/zuijiawoniu) | [@netAir](https://github.com/netAir) | [@scil](https://github.com/scil) | [@tangrela](https://github.com/tangrela) | [@highroom](https://github.com/highroom) | [@luocaodan](https://github.com/luocaodan) | [@vc5](https://github.com/vc5) | [@1again](https://github.com/1again) | [@obaiyan](https://github.com/obaiyan) | [@zsbh](https://github.com/zsbh) | [@jiannanya](https://github.com/jiannanya) | [@Jerry12228](https://github.com/Jerry12228)
 
 
 ### Release Notes
 
-   [changelog](https://github.com/jhao104/proxy_pool/blob/master/docs/changelog.rst)
-
-<a href="https://hellogithub.com/repository/92a066e658d147cc8bd8397a1cb88183" target="_blank"><img src="https://api.hellogithub.com/v1/widgets/recommend.svg?rid=92a066e658d147cc8bd8397a1cb88183&claim_uid=DR60NequsjP54Lc" alt="Featured｜HelloGitHub" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+   [changelog](https://github.com/fengwm64/proxy_pool/blob/master/docs/changelog.rst)
